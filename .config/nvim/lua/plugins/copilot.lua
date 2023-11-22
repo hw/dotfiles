@@ -1,7 +1,7 @@
 return {
   {
     "zbirenbaum/copilot.lua",
-    enabled = false,
+--    enabled = false,
     config = function ()
       require("copilot").setup {
         suggestion = { enabled = true },
@@ -11,7 +11,7 @@ return {
   },
   {
     "zbirenbaum/copilot-cmp",
-    enabled = false,
+--    enabled = false,
     config = function()
       require("copilot_cmp").setup()
     end

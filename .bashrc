@@ -126,6 +126,10 @@ if [ -d "$HOME/.local/bin" ] ; then
 fi
 
 ###########################################################
+# Android (termux) customizations
+if [ "$(uname -o)" == "Android" ]; then
+  PS1="\[\e[0;32m\]\w\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] ";
+fi
 
 # GPG
 export GPG_TTY=$(tty)
@@ -143,6 +147,11 @@ if [ "$?" == 2 ]; then
   eval "$(<${SSH_AGENT_ENV})" > /dev/null
 fi
 
+# Auto-completion for kubectl
+if [ -f "/usr/bin/kubectl" ]; then
+  source <(kubectl completion bash)
+fi
+
 # add Go to path if it exists
 if [ -d "/usr/local/go" ]; then
     PATH="/usr/local/go/bin:$PATH"
@@ -156,7 +165,17 @@ if [ -d "$HOME/.cargo/bin" ] ; then
     source "$HOME/.cargo/env"
 fi
 
-# Auto-completion for kubectl
-if [ -f "/usr/bin/kubectl" ]; then
-  source <(kubectl completion bash)
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/hw/.local/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/hw/.local/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/hw/.local/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/hw/.local/miniconda3/bin:$PATH"
+    fi
 fi
+unset __conda_setup
+# <<< conda initialize <<<
