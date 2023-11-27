@@ -115,16 +115,6 @@ fi
 # fix dbus exit 1
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-
 ###########################################################
 # Android (termux) customizations
 if [ "$(uname -o)" == "Android" ]; then
@@ -152,18 +142,24 @@ if [ -f "/usr/bin/kubectl" ]; then
   source <(kubectl completion bash)
 fi
 
-# add Go to path if it exists
-if [ -d "/usr/local/go" ]; then
-    PATH="/usr/local/go/bin:$PATH"
-elif [ -d "$HOME/go" ] ; then
-    PATH="$HOME/go/bin:$PATH"
-fi
 
-# add Rust to path if it exists
-if [ -d "$HOME/.cargo/bin" ] ; then
-    PATH="$HOME/.cargo/bin:$PATH"
-    source "$HOME/.cargo/env"
-fi
+# Addition SDKs/toolkits to add to path
+TOOL_PATHS=( "${HOME}" "${HOME}/.local" "/opt/arm-gnu-toolchain" "/usr/local/go" "${HOME}/go" "${HOME}/.cargo" )
+SRC_PATHS=( "${HOME}/.cargo/env" )
+
+for TOOL_PATH in ${TOOL_PATHS[@]}; do
+  if [ -d "${TOOL_PATH}/bin" ]; then
+    PATH="${TOOL_PATH}/bin:$PATH"
+  fi
+done
+
+for SRC_PATH in ${SRC_PATHS[@]}; do
+  if [ -r "${SRC_PATH}" ]; then
+    source "${SRC_PATH}"
+  fi
+done
+
+export PATH
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
