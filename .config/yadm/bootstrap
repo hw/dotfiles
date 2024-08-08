@@ -12,11 +12,11 @@ copy_os_specific_files() {
 case $OS in 
   "GNU/Linux")
     OS=Linux
-    copy_os_specific_files()
+    copy_os_specific_files
     ;;
   "Android")
     OS=Android 
-    copy_os_specific_files()
+    copy_os_specific_files
     ;;
   *)
     # .config/yadm/bootstrap.d/${OS}.sh

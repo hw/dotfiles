@@ -26,17 +26,12 @@ Install node.js installed for the LSP.
 
 ### node.js
 ```
-curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
-apt-get install -y nodejs
+curl https://get.volta.sh | bash
+volta install node
 ```
 
 ### python
 ```
-apt install python3 python3-venv
-
-```
-
-### rust
-```
+apt install python3 python3-venv python3-neovim
 
 ```

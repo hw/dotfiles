@@ -115,36 +115,53 @@ fi
 # fix dbus exit 1
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-
 ###########################################################
 # Android (termux) customizations
 if [ "$(uname -o)" == "Android" ]; then
   PS1="\[\e[0;32m\]\w\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] ";
 fi
 
+# Cleanup PATH - remove games
+PATH=${PATH%:/usr/games}
+PATH=${PATH%:/usr/local/games}
+
 # GPG
 export GPG_TTY=$(tty)
 
 # SSH agent
-export SSH_AGENT_ENV="$HOME/.ssh/sockets/ssh-agent.env"
+SSH_AGENT_ENV="$HOME/.ssh/sockets/ssh-agent.env"
+[[ -r ${SSH_AGENT_ENV} ]] && eval "$(<${SSH_AGENT_ENV})" > /dev/null
 
-if [ -r ${SSH_AGENT_ENV} ]; then
+SSH_ADD_OUTPUT=$(timeout 0.3 ssh-add -l &>/dev/null)
+SSH_ADD_RESULT="$?"
+[[ "${SSH_ADD_OUTPUT}" == "Could not open a connection to your authentication agent." ]] && SSH_ADD_RESULT=124
+if [ "${SSH_ADD_RESULT}" == "2" ] || [ "${SSH_ADD_RESULT}" == "124" ]; then
+  unset SSH_AGENT_SOCK
+  (umask 066; ssh-agent > ${SSH_AGENT_ENV})
   eval "$(<${SSH_AGENT_ENV})" > /dev/null
 fi
 
-ssh-add -l &>/dev/null
-if [ "$?" == 2 ]; then
-  (umask 066; ssh-agent > ${SSH_AGENT_ENV})
-  eval "$(<${SSH_AGENT_ENV})" > /dev/null
+# add common used SDK and development tools to PATH
+export VOLTA_HOME="${HOME}/.volta"
+PACKAGES=(
+  "/opt/arm-none-eabi" 
+  "/usr/local/go" 
+  "${HOME}/go" 
+  "${HOME}/.local" 
+  "${VOLTA_HOME}"
+  "${HOME}/.local/cargo" 
+)
+
+for PKG in ${PACKAGES[@]}; do
+  if [ -d "${PKG}/bin" ]; then
+    PATH="${PKG}/bin:${PATH}"
+  fi
+done
+export PATH
+
+# Setup Rust environment if it exists
+if [ -f "$HOME/.cargo/env" ] ; then
+    source "$HOME/.cargo/env"
 fi
 
 # Auto-completion for kubectl
@@ -152,29 +169,16 @@ if [ -f "/usr/bin/kubectl" ]; then
   source <(kubectl completion bash)
 fi
 
-# add Go to path if it exists
-if [ -d "/usr/local/go" ]; then
-    PATH="/usr/local/go/bin:$PATH"
-elif [ -d "$HOME/go" ] ; then
-    PATH="$HOME/go/bin:$PATH"
-fi
-
-# add Rust to path if it exists
-if [ -d "$HOME/.cargo/bin" ] ; then
-    PATH="$HOME/.cargo/bin:$PATH"
-    source "$HOME/.cargo/env"
-fi
-
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/hw/.local/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+__conda_setup="$('/home/hw/.local/share/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/home/hw/.local/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/hw/.local/miniconda3/etc/profile.d/conda.sh"
+    if [ -f "/home/hw/.local/share/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/hw/.local/share/miniconda3/etc/profile.d/conda.sh"
     else
-        export PATH="/home/hw/.local/miniconda3/bin:$PATH"
+        export PATH="/home/hw/.local/share/miniconda3/bin:$PATH"
     fi
 fi
 unset __conda_setup
