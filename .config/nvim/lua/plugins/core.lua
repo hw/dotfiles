@@ -16,18 +16,13 @@ return {
           "python", 
           "rust", 
           "go", 
-          "java" 
+          "java", 
+          "proto"
         },
         sync_install = true,
         highlight = { enable = true },
         indent = { enable = true },
       }
-    end
-  },
-  {
-    "williamboman/mason.nvim",
-    config = function()
-      require("mason").setup()
     end
   },
   {
@@ -61,5 +56,9 @@ return {
       require("nvim-surround").setup()
     end,
   },
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+  }
 }
 
