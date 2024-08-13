@@ -6,7 +6,6 @@ return {
       "hrsh7th/cmp-nvim-lua"
     },
     config = function()
-      local notify = require("notify")
       local cmp = require("cmp")
       local tsutils = require("nvim-treesitter.ts_utils")
 
@@ -26,6 +25,7 @@ return {
             function(fallback)
               if cmp.visible() and cmp.get_active_entry() then
                   cmp.confirm{ behavior = cmp.ConfirmBehavior.Replace, select = false }
+                  cmp.close()
               else
                 fallback()
               end

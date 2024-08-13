@@ -27,4 +27,3 @@ vim.opt.termguicolors = true
 
 vim.opt.completeopt = "menu,menuone,noselect"
 vim.opt.keymodel = "startsel" -- select using Shift+Arrow keys 
-vim.g.mapleader = " "

@@ -1,5 +1,9 @@
 #! /bin/bash
 
+if [ "$EUID" -ne 0 ]; then
+  echo Please run as root
+  exit -1
+fi
 
 INSTALL_ARCHIVE=nvim-linux64.tar.gz
 RELEASE_URL=$(wget -q -O - https://api.github.com/repos/neovim/neovim/releases/latest | grep "download\/v\(.*\)\/${INSTALL_ARCHIVE}" | head -n 1 | cut -d : -f 2,3 | tr -d \")
@@ -37,11 +41,6 @@ else
     fi
     REMOVE_ARCHIVE="yes"
   fi 
-fi
-
-if [ "$EUID" -ne 0 ]; then
-  echo Please run as root
-  exit -1
 fi
 
 tar xf ${INSTALL_ARCHIVE}

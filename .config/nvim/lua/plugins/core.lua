@@ -20,18 +20,18 @@ return {
     config = function()
       local configs = require("nvim-treesitter.configs")
       configs.setup{
-        ensure_installed = { 
+        ensure_installed = {
           "vimdoc",
-          "yaml", "xml", "json", "markdown", "markdown_inline", 
+          "yaml", "xml", "json", "markdown", "markdown_inline",
           "html", "javascript", "typescript",
-          "lua", "bash", 
+          "lua", "bash",
           "asm", "disassembly",
           "c", "cpp", "cmake",
           "c_sharp",
-          "python", 
-          "rust", 
-          "go", 
-          "java", 
+          "python",
+          "rust",
+          "go",
+          "java",
           "proto"
         },
         sync_install = false,

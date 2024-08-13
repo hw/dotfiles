@@ -9,10 +9,17 @@ copy_os_specific_files() {
   fi
 }
 
+setup_linux() {
+  sudo apt update
+  sudo apt install -y bash-completion curl fail2ban git git-lfs gnupg htop luarocks mosh ncdu tmux ufw 
+  curl https://get.volta.sh | bash
+}
+
 case $OS in 
   "GNU/Linux")
     OS=Linux
     copy_os_specific_files
+    setup_linux
     ;;
   "Android")
     OS=Android 
