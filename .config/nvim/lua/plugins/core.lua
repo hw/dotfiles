@@ -59,6 +59,10 @@ return {
   {
     "folke/which-key.nvim",
     event = "VeryLazy",
+  },
+  {
+    "rcarriga/nvim-notify",
+    event = "VeryLazy",
   }
 }
 
