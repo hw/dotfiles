@@ -1,8 +1,23 @@
 return {
   {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd.colorscheme("tokyonight")
+    end,
+  },
+  {
+    "rcarriga/nvim-notify",
+    lazy = true,
+    config = function()
+      vim.notify = require("notify")
+    end,
+  },
+  {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    confg = function()
+    config = function()
       local configs = require("nvim-treesitter.configs")
       configs.setup{
         ensure_installed = { 
@@ -19,50 +34,37 @@ return {
           "java", 
           "proto"
         },
-        sync_install = true,
+        sync_install = false,
         highlight = { enable = true },
         indent = { enable = true },
       }
     end
   },
   {
-    "folke/tokyonight.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      vim.cmd.colorscheme("tokyonight")
-    end,
-  },
-  {
     "nvim-lualine/lualine.nvim",
     dependencies = {  "nvim-tree/nvim-web-devicons" },
-    config = function()
-      require("lualine").setup{
-        options = { theme = "tokyonight" }
-      }
-    end
+    opts = {
+      options = { theme = "tokyonight" }
+    }
+  },
+  {
+    "windwp/nvim-ts-autotag",
+    dependencies = {  "nvim-treesitter/nvim-treesitter" },
+    opts = {},
   },
   {
     "windwp/nvim-autopairs",
     event = "VeryLazy",
-    config = function()
-      require("nvim-autopairs").setup()
-    end,
+    opts = {}
   },
   {
     "kylechui/nvim-surround",
     event = "VeryLazy",
-    config = function()
-      require("nvim-surround").setup()
-    end,
+    opts = {},
   },
   {
     "folke/which-key.nvim",
-    event = "VeryLazy",
+    lazy = true,
   },
-  {
-    "rcarriga/nvim-notify",
-    event = "VeryLazy",
-  }
 }
 
