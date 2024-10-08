@@ -12,7 +12,7 @@ return {
       local mason_lspconfig = require("mason-lspconfig")
       require("mason").setup()
       mason_lspconfig.setup{
-        ensure_installed = { "bashls", "lua_ls", "html", "jsonls", "yamlls" }
+        ensure_installed = { "bashls", "html", "jq", "jsonls", "yamlls" }
       }
       mason_lspconfig.setup_handlers{
         function(server_name)

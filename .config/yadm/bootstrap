@@ -11,7 +11,7 @@ copy_os_specific_files() {
 
 setup_linux() {
   sudo apt update
-  sudo apt install -y bash-completion curl fail2ban git git-lfs gnupg htop luarocks mosh ncdu tmux ufw 
+  sudo apt install -y bash-completion curl duf fail2ban git git-lfs gnupg htop jq luarocks mosh ncdu rsync tmux ufw unzip zip 
   curl https://get.volta.sh | bash
 }
 
