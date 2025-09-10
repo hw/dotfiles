@@ -144,7 +144,7 @@ fi
 # add common used SDK and development tools to PATH
 export VOLTA_HOME="${HOME}/.volta"
 PACKAGES=(
-  "/opt/arm-none-eabi" 
+  "/opt/arm-gnu-toolchain" 
   "/usr/local/go" 
   "${HOME}/go" 
   "${HOME}/.local" 
