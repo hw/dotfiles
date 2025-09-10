@@ -51,7 +51,16 @@ require("lazy").setup({
     "nvim-tree/nvim-web-devicons",
     lazy = true,
   },
-
+  -- Inline diagnostics
+  {
+    "rachartier/tiny-inline-diagnostic.nvim",
+    event = "VeryLazy",
+    priority = 1000, -- needs to be loaded in first
+    config = function()
+      require('tiny-inline-diagnostic').setup()
+      vim.diagnostic.config({ virtual_text = false })
+    end
+  },
   -- Treesitter
   {
     "nvim-treesitter/nvim-treesitter",
