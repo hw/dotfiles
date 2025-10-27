@@ -83,15 +83,27 @@ require("lazy").setup({
     config = function()
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "pyright", "ts_ls" },
+        ensure_installed = { "pyright", "ts_ls" },
       })
 
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local lspconfig = require("lspconfig")
 
-      lspconfig.lua_ls.setup({ capabilities = capabilities })
-      lspconfig.pyright.setup({ capabilities = capabilities })
-      lspconfig.ts_ls.setup({ capabilities = capabilities })
+      vim.lsp.config.lua_ls = {
+        capabilities = capabilities,
+        root_dir = vim.fs.dirname(vim.fs.find({ '.luarc.json', '.luarc.jsonc', '.luacheckrc', 'stylua.toml', 'selene.toml' }, { upward = true })[1])
+      }
+      vim.lsp.config.pyright = {
+        capabilities = capabilities,
+        root_dir = vim.fs.dirname(vim.fs.find({ 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile' }, { upward = true })[1])
+      }
+      vim.lsp.config.ts_ls = {
+        capabilities = capabilities,
+        root_dir = vim.fs.dirname(vim.fs.find({ 'package.json', 'tsconfig.json', 'jsconfig.json' }, { upward = true })[1])
+      }
+
+      vim.lsp.enable('lua_ls')
+      vim.lsp.enable('pyright')
+      vim.lsp.enable('ts_ls')
     end,
   },
 
