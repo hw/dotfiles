@@ -16,19 +16,23 @@ HISTCONTROL=ignoreboth
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-HISTSIZE=1000
-HISTFILESIZE=2000
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTTIMEFORMAT='%F %T '
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
+shopt -s cdspell        # Auto-correct minor spelling errors in cd
+shopt -s dirspell       # Auto-correct directory name spelling
+shopt -s autocd         # cd into directory by typing just the name
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
-#shopt -s globstar
+shopt -s globstar
 
 # make less more friendly for non-text input files, see lesspipe(1)
-#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
@@ -79,18 +83,20 @@ if [ -x /usr/bin/dircolors ]; then
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
-    #alias grep='grep --color=auto'
-    #alias fgrep='fgrep --color=auto'
-    #alias egrep='egrep --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
 
 # colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
-#alias ll='ls -l'
-#alias la='ls -A'
-#alias l='ls -CF'
+alias ll='ls -lh'
+
+# additional useful aliases
+alias ..='cd ..'
+alias ...='cd ../..'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -117,7 +123,7 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
 ###########################################################
 # Android (termux) customizations
-if [ "$(uname -o)" == "Android" ]; then
+if [ "$(uname -o)" = "Android" ]; then
   PS1="\[\e[0;32m\]\w\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] ";
 fi
 
@@ -128,17 +134,21 @@ PATH=${PATH%:/usr/local/games}
 # GPG
 export GPG_TTY=$(tty)
 
+# Editor settings
+export EDITOR=vim
+export VISUAL=$EDITOR
+
 # SSH agent
 SSH_AGENT_ENV="$HOME/.ssh/sockets/ssh-agent.env"
 [[ -r ${SSH_AGENT_ENV} ]] && eval "$(<${SSH_AGENT_ENV})" > /dev/null
 
-SSH_ADD_OUTPUT=$(timeout 0.3 ssh-add -l &>/dev/null)
-SSH_ADD_RESULT="$?"
-[[ "${SSH_ADD_OUTPUT}" == "Could not open a connection to your authentication agent." ]] && SSH_ADD_RESULT=124
-if [ "${SSH_ADD_RESULT}" == "2" ] || [ "${SSH_ADD_RESULT}" == "124" ]; then
-  unset SSH_AGENT_SOCK
-  (umask 066; ssh-agent > ${SSH_AGENT_ENV})
-  eval "$(<${SSH_AGENT_ENV})" > /dev/null
+if ! timeout 0.1 ssh-add -l &>/dev/null; then
+  SSH_ADD_RESULT="$?"
+  if [ "${SSH_ADD_RESULT}" = "2" ] || [ "${SSH_ADD_RESULT}" = "124" ]; then
+    unset SSH_AGENT_SOCK
+    (umask 066; ssh-agent > ${SSH_AGENT_ENV})
+    eval "$(<${SSH_AGENT_ENV})" > /dev/null
+  fi
 fi
 
 # add common used SDK and development tools to PATH
@@ -152,7 +162,7 @@ PACKAGES=(
   "${HOME}/.local/cargo" 
 )
 
-for PKG in ${PACKAGES[@]}; do
+for PKG in "${PACKAGES[@]}"; do
   if [ -d "${PKG}/bin" ]; then
     PATH="${PKG}/bin:${PATH}"
   fi
@@ -163,9 +173,3 @@ export PATH
 if [ -f "$HOME/.cargo/env" ] ; then
     source "$HOME/.cargo/env"
 fi
-
-# Auto-completion for kubectl
-if [ -f "/usr/bin/kubectl" ]; then
-  source <(kubectl completion bash)
-fi
-
