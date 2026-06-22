@@ -1,112 +1,151 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Colors for output
+export CODEX_NON_INTERACTIVE=1
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Track success/failures
 SUCCESSES=()
 FAILURES=()
 
-# Function to log with color
 log_success() {
-  echo -e "${GREEN}✓${NC} $1"
+  printf '%b\n' "${GREEN}✓${NC} $1"
   SUCCESSES+=("$1")
 }
 
 log_error() {
-  echo -e "${RED}✗${NC} $1"
+  printf '%b\n' "${RED}✗${NC} $1" >&2
   FAILURES+=("$1")
 }
 
 log_info() {
-  echo -e "${YELLOW}→${NC} $1"
+  printf '%b\n' "${YELLOW}→${NC} $1"
 }
 
-# Check prerequisites
-if ! command -v curl >/dev/null 2>&1; then
-  echo "Error: curl is required but not installed."
-  exit 1
-fi
+update_command() {
+  local tool=$1
+  shift
 
-declare -A UPDATE_URLS=(
-  [volta]="https://get.volta.sh"
-  [uv]="https://astral.sh/uv/install.sh"
-  [claude]="https://claude.ai/install.sh"
-  [antigravity]="https://antigravity.google/cli/install.sh"
-  [opencode]="https://opencode.ai/install"
-)
-declare -A UPDATE_ARGS=(
-  [volta]="--skip-setup"
-  [opencode]="--no-modify-path"
-)
-
-# Update tools via curl installers
-for UPDATE_TOOL in "${!UPDATE_URLS[@]}"; do
-  log_info "Updating ${UPDATE_TOOL}..."
-  if curl -fsSL "${UPDATE_URLS[$UPDATE_TOOL]}" | bash -s -- ${UPDATE_ARGS[$UPDATE_TOOL]:-}; then
-    log_success "Updated ${UPDATE_TOOL}"
+  log_info "Updating ${tool}..."
+  if "$@"; then
+    log_success "Updated ${tool}"
   else
-    log_error "Failed to update ${UPDATE_TOOL}"
+    log_error "Failed to update ${tool}"
   fi
-done
+}
 
-# Update npm packages
-if ! command -v npm >/dev/null 2>&1; then
-  log_info "npm not found, installing Node.js via Volta..."
-  export VOLTA_HOME="${HOME}/.volta"
-  export PATH="${VOLTA_HOME}/bin:${PATH}"
-  volta install node
-fi
+run_remote_installer() {
+  local tool=$1
+  local url=$2
+  local interpreter=$3
+  local operation=$4
+  local installer
+  local progress_verb
+  local result_verb
+  shift 4
 
-NPM_PKGS=(
-  @openai/codex 
-  @google/gemini-cli
-)
-for NPM_PKG in ${NPM_PKGS[@]}; do 
-  log_info "Updating ${NPM_PKG}..."
-  if npm i -g --no-audit --no-fund "${NPM_PKG}@latest" 2>/dev/null; then
-    log_success "Updated ${NPM_PKG}"
+  case $operation in
+    install)
+      progress_verb=Installing
+      result_verb=Installed
+      ;;
+    update)
+      progress_verb=Updating
+      result_verb=Updated
+      ;;
+    *)
+      log_error "Invalid operation for ${tool}: ${operation}"
+      return
+      ;;
+  esac
+
+  if ! command -v curl >/dev/null 2>&1; then
+    log_error "Cannot ${operation} ${tool}: curl is not installed"
+    return
+  fi
+
+  if ! installer=$(mktemp); then
+    log_error "Cannot ${operation} ${tool}: failed to create a temporary file"
+    return
+  fi
+
+  log_info "${progress_verb} ${tool}..."
+  if curl -fsSL "$url" -o "$installer" && \
+    "$interpreter" "$installer" "$@"; then
+    log_success "${result_verb} ${tool}"
   else
-    log_error "Failed to update ${NPM_PKG}"
+    log_error "Failed to ${operation} ${tool}"
   fi
-done
+  rm -f "$installer"
+}
 
+manage_tool() {
+  local tool=$1
+  local url=$2
+  local interpreter=$3
+  local -a install_args=()
+  shift 3
 
-# Update Rust if rustup is installed
-if command -v rustup >/dev/null 2>&1; then
-  log_info "Updating Rust..."
-  if rustup update; then
-    log_success "Updated Rust"
+  while (($# > 0)) && [[ $1 != -- ]]; do
+    install_args+=("$1")
+    shift
+  done
+
+  if (($# == 0)); then
+    log_error "Invalid configuration for ${tool}: missing argument separator"
+    return
+  fi
+  shift
+
+  if command -v "$tool" >/dev/null 2>&1; then
+    if (($# > 0)); then
+      update_command "$tool" "$@"
+    else
+      run_remote_installer \
+        "$tool" "$url" "$interpreter" update "${install_args[@]}"
+    fi
   else
-    log_error "Failed to update Rust"
+    run_remote_installer \
+      "$tool" "$url" "$interpreter" install "${install_args[@]}"
   fi
-fi
+}
 
-# Move opencode binary to ~/.local/bin if it exists
-if [ -f "$HOME/.opencode/bin/opencode" ]; then
-  log_info "Moving opencode binary..."
-  mkdir -p "$HOME/.local/bin"
-  if mv -f "$HOME/.opencode/bin/opencode" "$HOME/.local/bin/opencode"; then
-    rm -rf "$HOME/.opencode"
-    log_success "Moved opencode binary"
-  else
-    log_error "Failed to move opencode binary"
+print_summary() {
+  printf '\n===== Update Summary =====\n'
+  printf 'Successes: %d\n' "${#SUCCESSES[@]}"
+  printf 'Failures: %d\n' "${#FAILURES[@]}"
+
+  if ((${#FAILURES[@]} > 0)); then
+    printf '\nFailed installs/updates:\n'
+    printf '  - %s\n' "${FAILURES[@]}"
   fi
-fi
 
-# Summary
-echo ""
-echo "===== Update Summary ====="
-echo "Successes: ${#SUCCESSES[@]}"
-echo "Failures: ${#FAILURES[@]}"
+  ((${#FAILURES[@]} == 0))
+}
 
-if [ "${#FAILURES[@]}" -gt 0 ]; then
-  echo ""
-  echo "Failed updates:"
-  printf '  - %s\n' "${FAILURES[@]}"
-  exit 1
-fi
+main() {
+  # Arguments before `--` belong to the installer; arguments after it are the
+  # update command. An empty update command reruns the bootstrap installer,
+  # which is Volta's update mechanism.
+  manage_tool uv https://astral.sh/uv/install.sh sh \
+    -- uv self update
+  manage_tool claude https://claude.ai/install.sh bash \
+    -- claude update
+  manage_tool codex https://chatgpt.com/codex/install.sh sh \
+    -- codex update
+  manage_tool opencode https://opencode.ai/install bash \
+    --no-modify-path -- opencode upgrade
+  manage_tool agy https://antigravity.google/cli/install.sh bash \
+    -- agy update
+  manage_tool volta https://get.volta.sh bash \
+    --skip-setup --
+  manage_tool rustup https://sh.rustup.rs sh \
+    -y --no-modify-path -- rustup update
+
+  print_summary
+}
+
+main "$@"
