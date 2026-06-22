@@ -88,6 +88,14 @@ require("lazy").setup({
       { "<leader>fw", "<cmd>FzfLua grep_cword<cr>",  desc = "Grep word under cursor" },
     },
     config = function()
+      -- fzf-lua's default socket name only has one-second resolution, so two
+      -- Neovim instances started together can collide and poison the module.
+      if not vim.g.fzf_lua_server then
+        local ok, server = pcall(vim.fn.serverstart, vim.fn.tempname())
+        if ok then
+          vim.g.fzf_lua_server = server
+        end
+      end
       require("fzf-lua").setup({ "default" })
     end,
   },
