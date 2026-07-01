@@ -1,0 +1,66 @@
+# ~/.bashrc.local: personal customizations, sourced from ~/.bashrc
+# Keep machine-specific / personal tweaks here so ~/.bashrc stays close to
+# the distro default.
+
+# fix dbus exit 1
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+
+###########################################################
+# Android (termux) customizations
+if [ "$(uname -o)" = "Android" ]; then
+  PS1="\[\e[0;32m\]\w\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] ";
+fi
+
+# Cleanup PATH - remove games
+PATH=${PATH%:/usr/games}
+PATH=${PATH%:/usr/local/games}
+
+# GPG
+export GPG_TTY=$(tty)
+
+# Editor settings
+export EDITOR=vim
+export VISUAL=$EDITOR
+
+# SSH agent — reuse a persistent agent; only a cold shell pays for the probe.
+SSH_AGENT_ENV="$HOME/.ssh/sockets/ssh-agent.env"
+
+if [ ! -S "${SSH_AUTH_SOCK}" ]; then
+  # No live socket inherited: load the saved agent from a prior login...
+  [[ -r ${SSH_AGENT_ENV} ]] && eval "$(<${SSH_AGENT_ENV})" > /dev/null
+  # ...and verify it's actually alive (2 = no agent, 124 = unresponsive).
+  timeout 1 ssh-add -l &>/dev/null
+  case $? in
+    2|124)
+      unset SSH_AUTH_SOCK
+      (umask 066; ssh-agent > "${SSH_AGENT_ENV}")
+      eval "$(<${SSH_AGENT_ENV})" > /dev/null
+      ;;
+  esac
+fi
+
+# add common used SDK and development tools to PATH
+export VOLTA_HOME="${HOME}/.volta"
+PACKAGES=(
+  "/opt/arm-gnu-toolchain"
+  "/usr/local/go"
+  "${HOME}/go"
+  "${HOME}/.local"
+  "${VOLTA_HOME}"
+  "${HOME}/.local/cargo"
+)
+
+for PKG in "${PACKAGES[@]}"; do
+  if [ -d "${PKG}/bin" ]; then
+    PATH="${PKG}/bin:${PATH}"
+  fi
+done
+export PATH
+
+# Setup Rust environment if it exists
+if [ -f "$HOME/.cargo/env" ] ; then
+    source "$HOME/.cargo/env"
+fi
+
+# opencode
+export PATH=/home/hw/.opencode/bin:$PATH

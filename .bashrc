@@ -118,58 +118,8 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# fix dbus exit 1
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-
-###########################################################
-# Android (termux) customizations
-if [ "$(uname -o)" = "Android" ]; then
-  PS1="\[\e[0;32m\]\w\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] ";
-fi
-
-# Cleanup PATH - remove games
-PATH=${PATH%:/usr/games}
-PATH=${PATH%:/usr/local/games}
-
-# GPG
-export GPG_TTY=$(tty)
-
-# Editor settings
-export EDITOR=vim
-export VISUAL=$EDITOR
-
-# SSH agent
-SSH_AGENT_ENV="$HOME/.ssh/sockets/ssh-agent.env"
-[[ -r ${SSH_AGENT_ENV} ]] && eval "$(<${SSH_AGENT_ENV})" > /dev/null
-
-if ! timeout 0.1 ssh-add -l &>/dev/null; then
-  SSH_ADD_RESULT="$?"
-  if [ "${SSH_ADD_RESULT}" = "2" ] || [ "${SSH_ADD_RESULT}" = "124" ]; then
-    unset SSH_AGENT_SOCK
-    (umask 066; ssh-agent > ${SSH_AGENT_ENV})
-    eval "$(<${SSH_AGENT_ENV})" > /dev/null
-  fi
-fi
-
-# add common used SDK and development tools to PATH
-export VOLTA_HOME="${HOME}/.volta"
-PACKAGES=(
-  "/opt/arm-gnu-toolchain" 
-  "/usr/local/go" 
-  "${HOME}/go" 
-  "${HOME}/.local" 
-  "${VOLTA_HOME}"
-  "${HOME}/.local/cargo" 
-)
-
-for PKG in "${PACKAGES[@]}"; do
-  if [ -d "${PKG}/bin" ]; then
-    PATH="${PKG}/bin:${PATH}"
-  fi
-done
-export PATH
-
-# Setup Rust environment if it exists
-if [ -f "$HOME/.cargo/env" ] ; then
-    source "$HOME/.cargo/env"
+# Personal customizations live in a separate add-on file, keeping this
+# ~/.bashrc close to the distro default.
+if [ -f ~/.bashrc.local ]; then
+    . ~/.bashrc.local
 fi
