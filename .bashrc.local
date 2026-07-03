@@ -59,8 +59,10 @@ export PATH
 
 # Setup Rust environment if it exists
 if [ -f "$HOME/.cargo/env" ] ; then
-    source "$HOME/.cargo/env"
+  source "$HOME/.cargo/env"
 fi
 
-# opencode
-export PATH=/home/hw/.opencode/bin:$PATH
+# Load API keys if it exists
+if [ -f "$HOME/.api-keys" ] ; then
+  source "$HOME/.api-keys"  
+fi
