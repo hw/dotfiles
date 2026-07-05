@@ -142,7 +142,7 @@ require("lazy").setup({
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     config = function()
-      require("nvim-treesitter.configs").setup({
+      require("nvim-treesitter.config").setup({
         ensure_installed = { "lua", "python", "javascript", "typescript", "json", "html", "css" },
         highlight = { enable = true },
         indent = { enable = true },
@@ -162,7 +162,7 @@ require("lazy").setup({
     config = function()
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "pyright", "ts_ls" },
+        ensure_installed = { "pyright", "ts_ls", "jsonls", "yamlls", "bashls" },
         automatic_enable = false, -- enable servers explicitly below
       })
 
