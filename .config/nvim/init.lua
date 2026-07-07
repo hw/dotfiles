@@ -142,11 +142,17 @@ require("lazy").setup({
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     config = function()
-      require("nvim-treesitter.config").setup({
-        ensure_installed = { "lua", "python", "javascript", "typescript", "json", "html", "css" },
-        highlight = { enable = true },
-        indent = { enable = true },
-      })
+      local status, treesitter_config = pcall(require, "nvim-treesitter.config")
+      if not status then
+        status, treesitter_config = pcall(require, "nvim-treesitter.configs")
+      end
+      if status then
+        treesitter_config.setup({
+          ensure_installed = { "lua", "python", "javascript", "typescript", "json", "html", "css" },
+          highlight = { enable = true },
+          indent = { enable = true },
+        })
+      end
     end,
   },
 
@@ -160,9 +166,20 @@ require("lazy").setup({
     },
     event = { "BufReadPre", "BufNewFile" },
     config = function()
+      local function is_termux()
+        local prefix = vim.env.PREFIX
+        return prefix ~= nil and prefix:find("com%.termux") ~= nil
+      end
+
+      local ensure_installed = { "pyright", "ts_ls", "jsonls", "yamlls", "bashls" }
+      -- Mason has no lua_ls package on Termux; install via pkg there instead.
+      if not is_termux() then
+        table.insert(ensure_installed, "lua_ls")
+      end
+
       require("mason").setup()
       require("mason-lspconfig").setup({
-        ensure_installed = { "pyright", "ts_ls", "jsonls", "yamlls", "bashls" },
+        ensure_installed = ensure_installed,
         automatic_enable = false, -- enable servers explicitly below
       })
 
@@ -171,6 +188,16 @@ require("lazy").setup({
       vim.lsp.config.lua_ls = {
         capabilities = capabilities,
         root_markers = { ".luarc.json", ".luarc.jsonc", ".luacheckrc", "stylua.toml", "selene.toml", ".git" },
+        settings = {
+          Lua = {
+            runtime = { version = "LuaJIT" },
+            diagnostics = { globals = { "vim" } },
+            workspace = {
+              checkThirdParty = false,
+              library = vim.api.nvim_get_runtime_file("", true),
+            },
+          },
+        },
       }
       vim.lsp.config.pyright = {
         capabilities = capabilities,
@@ -180,10 +207,25 @@ require("lazy").setup({
         capabilities = capabilities,
         root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
       }
+      vim.lsp.config.jsonls = {
+        capabilities = capabilities,
+        root_markers = { "package.json", ".git" },
+      }
+      vim.lsp.config.yamlls = {
+        capabilities = capabilities,
+        root_markers = { ".git" },
+      }
+      vim.lsp.config.bashls = {
+        capabilities = capabilities,
+        root_markers = { ".git" },
+      }
 
-      vim.lsp.enable('lua_ls')
-      vim.lsp.enable('pyright')
-      vim.lsp.enable('ts_ls')
+      vim.lsp.enable("lua_ls")
+      vim.lsp.enable("pyright")
+      vim.lsp.enable("ts_ls")
+      vim.lsp.enable("jsonls")
+      vim.lsp.enable("yamlls")
+      vim.lsp.enable("bashls")
 
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(args)
@@ -209,6 +251,7 @@ require("lazy").setup({
   {
     "hrsh7th/nvim-cmp",
     dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
     },
     event = "InsertEnter",
