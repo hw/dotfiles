@@ -82,6 +82,51 @@ run_remote_installer() {
   rm -f "$installer"
 }
 
+backup_bashrc() {
+  local bashrc="$HOME/.bashrc"
+  [[ -f "$bashrc" ]] || return 0
+  local backup
+  backup=$(mktemp "${bashrc}.bak.XXXXXX") || return 0
+  if cp -p "$bashrc" "$backup"; then
+    printf '%s\n' "$backup"
+  else
+    rm -f "$backup"
+    return 0
+  fi
+}
+
+review_bashrc_changes() {
+  local backup=$1
+  [[ -n "$backup" && -f "$backup" ]] || return 0
+  local bashrc="$HOME/.bashrc"
+
+  if diff -q "$backup" "$bashrc" >/dev/null 2>&1; then
+    rm -f "$backup"
+    return 0
+  fi
+
+  printf '\n'
+  log_info "opencode modified $bashrc. Diff:"
+  diff -u --color=auto "$backup" "$bashrc" || true
+  printf '\n'
+
+  if [[ ! -t 0 ]]; then
+    log_info "Non-interactive: kept changes, backup at $backup"
+    return 0
+  fi
+
+  local reply
+  read -rp "Keep these changes to .bashrc? [Y/n] " reply || true
+  if [[ "${reply:-y}" =~ ^[Yy]$ ]]; then
+    rm -f "$backup"
+    log_success "Kept .bashrc changes"
+  else
+    cp -p "$backup" "$bashrc"
+    rm -f "$backup"
+    log_info "Reverted $bashrc to backup"
+  fi
+}
+
 manage_tool() {
   local tool=$1
   local url=$2
@@ -136,8 +181,12 @@ main() {
     -- claude update
   manage_tool codex https://chatgpt.com/codex/install.sh sh \
     -- codex update
+  local bashrc_backup
+  bashrc_backup=$(backup_bashrc)
+  [[ -n "$bashrc_backup" ]] && log_info "Backed up ~/.bashrc"
   manage_tool opencode https://opencode.ai/install bash \
     --no-modify-path -- opencode upgrade
+  review_bashrc_changes "$bashrc_backup"
   manage_tool agy https://antigravity.google/cli/install.sh bash \
     -- agy update
   manage_tool volta https://get.volta.sh bash \
