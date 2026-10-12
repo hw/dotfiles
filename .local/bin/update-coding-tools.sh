@@ -185,10 +185,8 @@ main() {
     -- claude update
   manage_tool codex https://chatgpt.com/codex/install.sh sh \
     -- codex update
-  manage_tool opencode https://opencode.ai/install bash \
+  manage_tool opencode https://opencode.ai/v2/install bash \
     --no-modify-path -- opencode upgrade
-  manage_tool agy https://antigravity.google/cli/install.sh bash \
-    -- agy update
   manage_tool volta https://get.volta.sh bash \
     --skip-setup --
   manage_tool rustup https://sh.rustup.rs sh \
