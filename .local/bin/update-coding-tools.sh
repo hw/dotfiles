@@ -179,8 +179,9 @@ main() {
   bashrc_backup=$(backup_bashrc)
   [[ -n "$bashrc_backup" ]] && log_info "Backed up ~/.bashrc"
 
-  manage_tool uv https://astral.sh/uv/install.sh sh \
-    -- uv self update
+  manage_tool mise https://mise.run sh \
+    -- mise self-update --yes
+  update_command "mise tools" mise upgrade
   manage_tool claude https://claude.ai/install.sh bash \
     -- claude update
   manage_tool codex https://chatgpt.com/codex/install.sh sh \

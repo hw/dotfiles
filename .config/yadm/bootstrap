@@ -12,13 +12,18 @@ copy_os_specific_files() {
 setup_linux() {
   sudo apt update
   sudo apt install -y bash-completion curl fzf git git-lfs gnupg htop jq luarocks mosh ncdu ripgrep rsync tmux ufw unzip zip 
-  curl https://get.volta.sh | bash
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  curl -fsSL https://mise.run | sh
+  mise install node
+  mise install uv
+  mise use -g uv
 }
 
 setup_android() {
   apt update
-  apt install curl fzf git git-lfs gnupg htop jq luarocks mosh neovim ripgrep rsync tmux uv unzip zip
+  apt install curl fzf git git-lfs gnupg htop jq luarocks mise mosh neovim ripgrep rsync tmux unzip zip
+  mise install node
+  mise install uv
+  mise use -g uv
 }
 
 case $OS in 
