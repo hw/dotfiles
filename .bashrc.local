@@ -40,13 +40,11 @@ if [ ! -S "${SSH_AUTH_SOCK}" ]; then
 fi
 
 # add common used SDK and development tools to PATH
-export VOLTA_HOME="${HOME}/.volta"
 PACKAGES=(
   "/opt/arm-gnu-toolchain"
   "/usr/local/go"
   "${HOME}/go"
   "${HOME}/.local"
-  "${VOLTA_HOME}"
   "${HOME}/.local/cargo"
 )
 
@@ -56,6 +54,10 @@ for PKG in "${PACKAGES[@]}"; do
   fi
 done
 export PATH
+
+if [ -x "$HOME/.local/bin/mise" ]; then
+  eval $(mise activate bash)
+fi
 
 # Setup Rust environment if it exists
 if [ -f "$HOME/.cargo/env" ] ; then
