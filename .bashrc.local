@@ -19,7 +19,7 @@ PATH=${PATH%:/usr/local/games}
 export GPG_TTY=$(tty)
 
 # Editor settings
-export EDITOR=vim
+export EDITOR=nvim
 export VISUAL=$EDITOR
 
 # SSH agent — reuse a persistent agent; only a cold shell pays for the probe.
@@ -41,9 +41,6 @@ fi
 
 # add common used SDK and development tools to PATH
 PACKAGES=(
-  "/opt/arm-gnu-toolchain"
-  "/usr/local/go"
-  "${HOME}/go"
   "${HOME}/.local"
   "${HOME}/.local/cargo"
 )
@@ -55,13 +52,14 @@ for PKG in "${PACKAGES[@]}"; do
 done
 export PATH
 
-if [ -x "$HOME/.local/bin/mise" ]; then
-  eval $(mise activate bash)
-fi
-
 # Setup Rust environment if it exists
 if [ -f "$HOME/.cargo/env" ] ; then
   source "$HOME/.cargo/env"
+fi
+
+# Setup mise
+if [ -x "$HOME/.local/bin/mise" ]; then
+  eval $(mise activate bash)
 fi
 
 # Load API keys if it exists
