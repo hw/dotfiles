@@ -173,8 +173,7 @@ print_summary() {
 
 main() {
   # Arguments before `--` belong to the installer; arguments after it are the
-  # update command. An empty update command reruns the bootstrap installer,
-  # which is Volta's update mechanism.
+  # update command. An empty update command reruns the bootstrap installer.
   local bashrc_backup
   bashrc_backup=$(backup_bashrc)
   [[ -n "$bashrc_backup" ]] && log_info "Backed up ~/.bashrc"
@@ -188,8 +187,6 @@ main() {
     -- codex update
   manage_tool opencode https://opencode.ai/v2/install bash \
     --no-modify-path -- opencode upgrade
-  manage_tool volta https://get.volta.sh bash \
-    --skip-setup --
   manage_tool rustup https://sh.rustup.rs sh \
     -y --no-modify-path -- rustup update
 
