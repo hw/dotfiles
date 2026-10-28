@@ -300,4 +300,11 @@ require("lazy").setup({
       })
     end,
   },
+}, {
+  performance = {
+    rtp = {
+      -- Preserve system runtime paths, including Neovim's bundled parsers.
+      reset = false,
+    },
+  },
 })
